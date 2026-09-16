@@ -1,4 +1,16 @@
-# OHDSI-Boston logo
+# OHDSI Boston
+
+This repository holds two things:
+
+| | |
+| --- | --- |
+| [`docs/`](docs/) | The **website**, a static site published with GitHub Pages. See [`docs/README.md`](docs/README.md). |
+| the root | The **logo**, generated reproducibly in R. Documented below. |
+| [`google-apps-script/`](google-apps-script/) | The signup endpoint for the site's email form. Deployed to Google, not to Pages. |
+
+---
+
+# The logo
 
 A reproducible, vector-quality **OHDSI-Boston** logo generated entirely from R.
 
@@ -101,6 +113,33 @@ above it (`LAYOUT$word_width`), with the subtitle narrower again.
 Tuning knobs (colours, star field, map framing, layout rhythm, output size) are
 the `COL`, `GEO`, `SKY`, `MAP`, `LAYOUT` and `OUT` lists at the top of the
 script.
+
+## Boston geography
+
+`docs/js/coastline.js` is generated from the same cached Natural Earth extract
+as the logo, in the same orthographic projection. To regenerate it — after
+changing the framing, say — run this against the repository root:
+
+```r
+library(sf); sf_use_s2(FALSE)
+land <- st_read("data-cache/ne10_northeast_land.geojson")
+
+lon0 <- -70.95; lat0 <- 42.15; span_km <- 190      # the diagram's framing
+crs  <- sprintf("+proj=ortho +lat_0=%f +lon_0=%f +R=6371000 +units=m +no_defs",
+                lat0, lon0)
+
+half <- span_km * 1000 / 2
+box  <- st_polygon(list(cbind(c(-half, half, half, -half, -half) * 1.05,
+                              c(-half, -half, half, half, -half) * 1.05)))
+pj   <- st_intersection(st_make_valid(st_transform(st_set_crs(land, 4326), crs)),
+                        st_sfc(box, crs = crs))
+pj   <- st_simplify(pj, dTolerance = 260)          # keeps the file a few KB
+
+# Project to the diagram's 0..100 box (y flipped for SVG) and emit one
+# "M x y L x y ..." subpath per ring; see docs/js/coastline.js for the shape
+# of the output. SITE_POINTS are eight real institutions placed on a ring
+# ordered by their true bearing from downtown Boston.
+```
 
 ## Licences
 
