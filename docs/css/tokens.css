@@ -1,0 +1,98 @@
+/**
+ * tokens.css — the design system, in one place.
+ *
+ * Colours are taken from the logo: OHDSI navy, the orange→amber gradient of
+ * the lit half, and the white of the mark. Nothing else is introduced.
+ *
+ * Contrast note: --orange is a graphic colour, not a text colour. It passes
+ * against the dark navy but only reaches 2.6:1 on paper, so on light
+ * backgrounds it is used for rules, marks and diagram fills only. Small orange
+ * text on paper uses --orange-text (4.5:1); --orange-deep (3.3:1) is reserved
+ * for large display text, where AA-large applies.
+ *
+ * Every text colour here was measured against the surface it is used on:
+ *   ink 10.8:1 · ink-muted 6.2:1 · ink-faint 4.6:1 on paper
+ *   ink-on-dark 13.0:1 · ink-on-dark-mut 7.8:1 · amber 9.3:1 on navy
+ */
+
+:root {
+  /* ------------------------------------------------------------- palette */
+  --navy:            #1a3c5b;
+  --navy-deep:       #12293e;
+  --navy-deeper:     #0d1f30;
+  --navy-soft:       #5c7a96;
+  --orange:          #ef7f1b;
+  --orange-deep:     #d96c0e;
+  --orange-text:     #b85808;   /* the darkest orange that passes AA on paper */
+  --amber:           #fdc50d;
+  --paper:           #faf9f7;
+  --paper-sunk:      #f2efea;
+  --white:           #ffffff;
+
+  /* ----------------------------------------------------------- semantics */
+  --bg:              var(--paper);
+  --ink:             var(--navy);
+  --ink-muted:       #4a6076;
+  --ink-faint:       #5f7488;   /* 4.6:1 on paper — safe for small text */
+  --rule:            rgba(26, 60, 91, 0.14);
+  --rule-strong:     rgba(26, 60, 91, 0.28);
+  --accent:          var(--orange);
+
+  /* On dark sections */
+  --bg-dark:         var(--navy-deep);
+  --ink-on-dark:     #eaf1f7;
+  --ink-on-dark-mut: #a9bed0;
+  --rule-on-dark:    rgba(234, 241, 247, 0.18);
+  --accent-on-dark:  var(--amber);
+
+  /* --------------------------------------------------------- typography */
+  --font-sans: 'Source Sans 3 Variable', 'Source Sans 3', 'Source Sans Pro',
+               -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+               'Liberation Mono', monospace;
+
+  /* Fluid type. The clamps are deliberately conservative at the small end:
+     this is a reading site before it is a poster. */
+  --step--1: clamp(0.83rem, 0.80rem + 0.15vw, 0.92rem);
+  --step-0:  clamp(1.02rem, 0.99rem + 0.16vw, 1.13rem);
+  --step-1:  clamp(1.19rem, 1.12rem + 0.34vw, 1.42rem);
+  --step-2:  clamp(1.44rem, 1.31rem + 0.64vw, 1.94rem);
+  --step-3:  clamp(1.75rem, 1.51rem + 1.18vw, 2.66rem);
+  --step-4:  clamp(2.10rem, 1.68rem + 2.08vw, 3.64rem);
+  --step-5:  clamp(2.45rem, 1.72rem + 3.65vw, 5.00rem);
+
+  --leading-tight: 1.12;
+  --leading-snug:  1.28;
+  --leading-body:  1.62;
+
+  /* ------------------------------------------------------------ spacing */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs:  0.75rem;
+  --space-s:   1rem;
+  --space-m:   1.5rem;
+  --space-l:   2.25rem;
+  --space-xl:  3.5rem;
+  --space-2xl: 5.5rem;
+  --space-3xl: clamp(5rem, 11vw, 9.5rem);
+
+  --measure:   68ch;
+  --page-max:  78rem;
+  --gutter:    clamp(1.15rem, 4.5vw, 3.5rem);
+
+  --radius:    3px;
+  --radius-lg: 6px;
+
+  --ease-out:  cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* The variable font covers 200–900, so one file serves every weight used. */
+@font-face {
+  font-family: 'Source Sans 3 Variable';
+  src: url('../assets/source-sans-3-var.woff2') format('woff2-variations'),
+       url('../assets/source-sans-3-var.woff2') format('woff2');
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+}
