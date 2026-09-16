@@ -61,6 +61,27 @@ GEO <- list(
   boston_r      = 0.0085   # emblem units
 )
 
+## The navy field is the night side of the same sphere: a sparse, seeded star
+## field, mostly at the threshold of visibility.  Kept off the white mark and
+## the square's edges so the silhouette stays crisp.
+SKY <- list(
+  seed       = 20260916,
+  n          = 210,
+  col        = "#FFFFFF",
+  r_min      = 0.0008,   # emblem units
+  r_max      = 0.0034,
+  alpha_min  = 0.13,
+  alpha_max  = 0.62,
+  falloff    = 3.0,      # exponent: higher => more faint specks, fewer bright
+  inset      = 0.014,    # keep clear of the bow and the square border
+  clear      = 0.011,    # keep clear of the arrow
+  jitter     = 0.72,     # 0 = perfect lattice, 1 = fully random within a cell
+  bright_n   = 6,        # a few stars get a soft glow
+  glow_mult  = 3.4,      # outermost glow radius, as a multiple of the star
+  glow_rings = 6,
+  glow_alpha = 0.055     # peak glow opacity, at the star's own edge
+)
+
 ## --- Globe / map framing ---------------------------------------------------
 ## Orthographic projection centred on Massachusetts Bay. MAP_SPAN_KM is the
 ## ground distance covered by one full emblem side, and MAP_ANCHOR is where the
@@ -96,11 +117,11 @@ FACE_SUB  <- list(family = FONT$family, bold = FALSE)
 LAYOUT <- list(
   margin          = 0.050,
   gap_emblem_word = 0.055,   # emblem bottom -> wordmark cap top
-  word_width      = 1.080,   # wordmark advance width (never squashed: this
+  word_width      = 0.985,   # wordmark advance width (never squashed: this
                              # only picks the font SIZE, not an x-scale)
   gap_word_sub    = 0.038,   # wordmark baseline -> subtitle cap top
   sub_smallcap    = 0.780,   # small-cap size as a fraction of the large cap
-  sub_width       = 1.000,
+  sub_width       = 0.910,
   sub_tracking    = 0.072    # extra tracking, as a fraction of the cap height
 )
 
@@ -399,19 +420,108 @@ orange_gradient_grob <- function() {
     )))
 }
 
-#' ggplot layers for the emblem, in painting order.
-draw_ohdsi_symbol <- function(geom, origin = c(0, 0)) {
+#' Circles as polygons, in data units, so a radius means exactly what it says
+#' regardless of device size (point `size` would not).
+circle_polygons <- function(x, y, r, n = 24) {
+  th <- seq(0, 2 * pi, length.out = n + 1)[-(n + 1)]
+  do.call(rbind, lapply(seq_along(x), function(i) data.frame(
+    x = x[i] + r[i] * cos(th),
+    y = y[i] + r[i] * sin(th),
+    id = i
+  )))
+}
+
+#' Concentric rings whose opacity decays outwards: a cheap, fully vector
+#' stand-in for a radial glow, which a single flat disc cannot fake (it reads
+#' as a grey bubble against the navy).
+glow_polygons <- function(x, y, r, sky = SKY) {
+  k <- seq(sky$glow_mult, 1, length.out = sky$glow_rings)
+  out <- lapply(seq_along(k), function(j) {
+    t <- (k[j] - 1) / (sky$glow_mult - 1)          # 1 outermost, 0 at the star
+    d <- circle_polygons(x, y, r * k[j])
+    d$id    <- d$id + j * 1000
+    d$alpha <- sky$glow_alpha * (1 - t)^2
+    d
+  })
+  do.call(rbind, out)
+}
+
+#' A seeded star field for the navy half of the emblem.
+#'
+#' Stars are sampled on a jittered lattice - a uniform draw clumps, and clumps
+#' read as dirt rather than as sky - then kept only where they fall inside the
+#' navy polygon eroded by `inset`, with the arrow (plus a margin) punched out,
+#' so no star clips the white mark or the square's border.  Radius and opacity
+#' follow a steep power law: a great many specks at the threshold of visibility
+#' and a handful of actual points of light.
+draw_night_sky <- function(geom, origin = c(0, 0), sky = SKY) {
+  as_poly <- function(df) sf::st_polygon(list(as.matrix(rbind(df, df[1, ]))))
+
+  region <- sf::st_buffer(sf::st_make_valid(as_poly(geom$navy)), -sky$inset)
+  region <- suppressWarnings(
+    sf::st_difference(region, sf::st_buffer(as_poly(geom$arrow), sky$clear)))
+  if (length(region) == 0 || sf::st_is_empty(region)) return(list())
+
+  ## Deterministic sampling, so the artwork is stable between runs.
+  set.seed(sky$seed)
+  bb   <- sf::st_bbox(region)
+  w    <- bb[["xmax"]] - bb[["xmin"]]
+  h    <- bb[["ymax"]] - bb[["ymin"]]
+  ## Oversample the lattice: only about half the square is navy.
+  nx   <- ceiling(sqrt(sky$n * 2.4 * w / h))
+  ny   <- ceiling(sky$n * 2.4 / nx)
+  cell <- expand.grid(i = seq_len(nx) - 1, j = seq_len(ny) - 1)
+  cand <- data.frame(
+    x = bb[["xmin"]] + (cell$i + 0.5 + sky$jitter * stats::runif(nrow(cell), -.5, .5)) * w / nx,
+    y = bb[["ymin"]] + (cell$j + 0.5 + sky$jitter * stats::runif(nrow(cell), -.5, .5)) * h / ny
+  )
+  inside <- sf::st_intersects(
+    sf::st_as_sf(cand, coords = c("x", "y")),
+    sf::st_sfc(region), sparse = FALSE)[, 1]
+  pts <- cand[inside, , drop = FALSE]
+  if (!nrow(pts)) return(list())
+  pts <- pts[sample.int(nrow(pts), min(sky$n, nrow(pts))), , drop = FALSE]
+
+  u <- stats::runif(nrow(pts))^sky$falloff
+  pts$r     <- sky$r_min + u * (sky$r_max - sky$r_min)
+  pts$alpha <- sky$alpha_min + u * (sky$alpha_max - sky$alpha_min)
+  pts$x     <- pts$x + origin[1]
+  pts$y     <- pts$y + origin[2]
+
+  stars <- circle_polygons(pts$x, pts$y, pts$r)
+  stars$alpha <- pts$alpha[stars$id]
+
+  bright <- pts[order(-pts$r), , drop = FALSE][seq_len(min(sky$bright_n, nrow(pts))), ]
+  glow   <- glow_polygons(bright$x, bright$y, bright$r, sky)
+
+  list(
+    ggplot2::geom_polygon(
+      data = glow, ggplot2::aes(x = x, y = y, group = id, alpha = alpha),
+      fill = sky$col, colour = NA, inherit.aes = FALSE, show.legend = FALSE),
+    ggplot2::geom_polygon(
+      data = stars, ggplot2::aes(x = x, y = y, group = id, alpha = alpha),
+      fill = sky$col, colour = NA, inherit.aes = FALSE, show.legend = FALSE),
+    ggplot2::scale_alpha_identity()
+  )
+}
+
+#' ggplot layers for the emblem, in painting order.  `on_navy` is drawn over
+#' the navy field but under the white mark, which is where the sky belongs.
+draw_ohdsi_symbol <- function(geom, origin = c(0, 0), on_navy = list()) {
   ox <- origin[1]; oy <- origin[2]
   poly <- function(df, fill) {
     ggplot2::geom_polygon(
       data = data.frame(x = df$x + ox, y = df$y + oy),
       ggplot2::aes(x, y), fill = fill, colour = NA, inherit.aes = FALSE)
   }
-  list(
-    poly(geom$navy,   COL$navy),
-    poly(geom$bow,    COL$white),
-    poly(geom$string, COL$white),
-    poly(geom$arrow,  COL$white)
+  c(
+    list(poly(geom$navy, COL$navy)),
+    on_navy,
+    list(
+      poly(geom$bow,    COL$white),
+      poly(geom$string, COL$white),
+      poly(geom$arrow,  COL$white)
+    )
   )
 }
 
@@ -543,7 +653,8 @@ build_logo <- function(layout = LAYOUT, out = OUT) {
                                xmin = 0, xmax = 1,
                                ymin = emblem_bottom, ymax = emblem_top) +
     globe +
-    draw_ohdsi_symbol(geom, origin = c(0, emblem_bottom)) +
+    draw_ohdsi_symbol(geom, origin = c(0, emblem_bottom),
+                      on_navy = draw_night_sky(geom, c(0, emblem_bottom))) +
     txt$layers +
     ggplot2::coord_sf(xlim = xlim, ylim = ylim, expand = FALSE,
                       crs = NULL, datum = NA, default_crs = NULL) +

@@ -11,6 +11,10 @@ Massachusetts Bay** places Boston, Boston Harbor, Massachusetts Bay, Cape Cod
 Bay and the hook of Cape Cod inside the orange field as a low-contrast tonal
 texture.
 
+The navy half is the night side of that same sphere: a sparse, seeded star
+field, mostly at the threshold of visibility, kept clear of the white mark and
+the square's border.
+
 The design order is deliberate: **OHDSI first, Boston second, map third.** At
 thumbnail size the geography disappears and the mark reads as the ordinary
 OHDSI logo; at larger sizes the orange field resolves into eastern
@@ -60,6 +64,7 @@ which makes the geometry easy to re-tune.
 | `project_geography()` / `to_emblem()` | orthographic projection, then an affine map into emblem coordinates |
 | `make_graticule()` | projected graticule, drawn at ~4 % opacity |
 | `draw_globe_layer()` | land fill, coastline and graticule, clipped to the orange field |
+| `draw_night_sky()` / `glow_polygons()` | the star field over the navy |
 | `orange_gradient_grob()` | the orange gradient |
 | `draw_ohdsi_symbol()` | the white mark, painted over the geography |
 | `fit_line()` / `layout_smallcaps()` / `draw_wordmark()` | type |
@@ -80,13 +85,22 @@ A few choices worth calling out:
   the orange field, but the stroke comes from the land's own boundary, so the
   clip edges along the bow and the arrow are never drawn as if they were
   coastline.
+- **Stars sit on a jittered lattice, not a uniform draw.** A uniform draw
+  clumps, and clumps read as dirt rather than as sky. Their radius and opacity
+  follow a steep power law, so most are specks; the few bright ones get a glow
+  built from concentric rings with decaying opacity, because a single flat disc
+  reads as a grey bubble against the navy.
 - **Type is sized by width, never scaled horizontally.** `fit_line()` picks the
   point size that makes a line its target width in the font's natural
   proportions; the subtitle is set in true small caps, with each glyph placed
   from the font's own advance widths.
 
-Tuning knobs (colours, map framing, layout rhythm, output size) are the
-`COL`, `GEO`, `MAP`, `LAYOUT` and `OUT` lists at the top of the script.
+The wordmark is set bold and fitted to sit within the width of the emblem
+above it (`LAYOUT$word_width`), with the subtitle narrower again.
+
+Tuning knobs (colours, star field, map framing, layout rhythm, output size) are
+the `COL`, `GEO`, `SKY`, `MAP`, `LAYOUT` and `OUT` lists at the top of the
+script.
 
 ## Licences
 
