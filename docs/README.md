@@ -71,7 +71,28 @@ The other blocks are `signup` (endpoint and anti-abuse settings) and `story`
 (scene pacing and how many marks the diagram draws).
 
 Colours, type scale and spacing are CSS custom properties in
-**`css/tokens.css`**, sampled from the logo.
+**`css/tokens.css`**. They are the same values the logo program uses, so the
+page and the artwork are literally the same palette — change one and change the
+other (`COL` in `../ohdsi_boston_logo.R`, and `COLOUR` in `js/scene-graph.js`
+for the diagram).
+
+### Artwork
+
+Every image in `assets/` except the star field and the social card is generated
+by `Rscript ../ohdsi_boston_logo.R`; none of them is hand-drawn, so re-running
+that program is how you change them.
+
+| Asset | Used for |
+| --- | --- |
+| `mark.svg` | the header lockup and the favicon — the emblem alone, the only variant that stays legible small |
+| `logo.svg` | the full badge, shown in the Join panel |
+| `badge.svg` | emblem, skyline and harbour without the wordmark |
+| `skyline.svg` | the horizon band across the foot of the dark panels |
+
+The skyline band is centred at its natural aspect rather than stretched, with a
+hairline shoreline running the full width so it still reads as a horizon on
+screens wider than the artwork. Its punched-out shapes are filled with the
+panel colour, so `save_skyline()` takes that colour as an argument.
 
 ---
 
@@ -138,7 +159,7 @@ docs/
 │   ├── signup.js       the form's state machine
 │   ├── coastline.js    generated Boston geography
 │   └── main.js         wiring, and nothing else
-└── assets/             logo mark, star field, web font, social image
+└── assets/             badge and marks, skyline, star field, web font, social image
 ```
 
 Five concerns, five modules, and the seams between them are narrow on purpose:

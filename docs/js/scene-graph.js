@@ -30,11 +30,12 @@ const VIEW = 100;                    // the diagram lives in a 0..100 square
 const VIEW_BOX = '-4 -4 108 108';    // ...with a margin, so nothing overflows
 const CENTRE = { x: 50, y: 50 };
 
+/* The same values as tokens.css and the R program's COL list. */
 const COLOUR = {
-  navy:     [26, 60, 91],
-  navySoft: [92, 122, 150],
-  orange:   [239, 127, 27],
-  amber:    [253, 197, 13]
+  navy:     [21, 64, 95],
+  navySoft: [92, 124, 153],
+  orange:   [239, 123, 22],
+  amber:    [253, 198, 5]
 };
 
 /* ------------------------------------------------------------------ maths */

@@ -1,8 +1,10 @@
 /**
  * tokens.css — the design system, in one place.
  *
- * Colours are taken from the logo: OHDSI navy, the orange→amber gradient of
- * the lit half, and the white of the mark. Nothing else is introduced.
+ * Colours are taken from the badge: OHDSI navy, the orange→amber gradient of
+ * the lit half, and the white of the mark and skyline. Nothing else is
+ * introduced. They are the same values the R program uses, so the page and the
+ * artwork are literally the same palette.
  *
  * Contrast note: --orange is a graphic colour, not a text colour. It passes
  * against the dark navy but only reaches 2.6:1 on paper, so on light
@@ -17,14 +19,14 @@
 
 :root {
   /* ------------------------------------------------------------- palette */
-  --navy:            #1a3c5b;
-  --navy-deep:       #12293e;
-  --navy-deeper:     #0d1f30;
-  --navy-soft:       #5c7a96;
-  --orange:          #ef7f1b;
-  --orange-deep:     #d96c0e;
-  --orange-text:     #b85808;   /* the darkest orange that passes AA on paper */
-  --amber:           #fdc50d;
+  --navy:            #15405f;
+  --navy-deep:       #102f47;
+  --navy-deeper:     #0b2336;
+  --navy-soft:       #5c7c99;
+  --orange:          #ef7b16;
+  --orange-deep:     #d96a0c;
+  --orange-text:     #b55607;   /* the darkest orange that passes AA on paper */
+  --amber:           #fdc605;
   --paper:           #faf9f7;
   --paper-sunk:      #f2efea;
   --white:           #ffffff;
@@ -32,16 +34,16 @@
   /* ----------------------------------------------------------- semantics */
   --bg:              var(--paper);
   --ink:             var(--navy);
-  --ink-muted:       #4a6076;
-  --ink-faint:       #5f7488;   /* 4.6:1 on paper — safe for small text */
+  --ink-muted:       #47637b;
+  --ink-faint:       #5c778e;   /* 4.6:1 on paper — safe for small text */
   --rule:            rgba(26, 60, 91, 0.14);
   --rule-strong:     rgba(26, 60, 91, 0.28);
   --accent:          var(--orange);
 
   /* On dark sections */
   --bg-dark:         var(--navy-deep);
-  --ink-on-dark:     #eaf1f7;
-  --ink-on-dark-mut: #a9bed0;
+  --ink-on-dark:     #e9f1f7;
+  --ink-on-dark-mut: #a6bdcf;
   --rule-on-dark:    rgba(234, 241, 247, 0.18);
   --accent-on-dark:  var(--amber);
 
