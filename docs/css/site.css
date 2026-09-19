@@ -41,6 +41,46 @@
 .panel--dark a { text-decoration-color: rgba(253, 197, 13, 0.55); }
 .panel--dark a:hover { color: var(--amber); }
 
+/* =============================================================== skyline */
+
+/* The same white skyline the badge carries, standing on the foot of a dark
+   panel. The SVG is centred at its natural aspect rather than stretched, and
+   a hairline shoreline runs the full width so it still reads as a horizon on
+   screens wider than the artwork. */
+.skyline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: clamp(80px, 14vw, 215px);
+  background-image: url('../assets/skyline.svg');
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  background-size: auto 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+.skyline::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.55);
+}
+@media (max-width: 720px) {
+  /* Narrow screens crop the artwork rather than shrinking it to a smear. */
+  .skyline { background-size: auto 100%; background-position: 62% bottom; }
+}
+
+.badge {
+  display: block;
+  width: clamp(8.5rem, 19vw, 13.5rem);
+  height: auto;
+  margin: 0 0 var(--space-xl);
+  border-radius: 2px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
 /* ================================================================ header */
 
 :root { --header-h: 3.75rem; }
@@ -100,7 +140,8 @@
 
 /* ================================================================== hero */
 
-.hero { padding-block: clamp(3.5rem, 9vw, 7rem) var(--space-3xl); }
+.hero { padding-block: clamp(3.5rem, 9vw, 7rem) calc(var(--space-2xl) + clamp(80px, 14vw, 215px)); }
+.hero .page { position: relative; z-index: 1; }
 .hero__grid {
   display: grid;
   gap: clamp(2rem, 5vw, 4rem);
@@ -517,7 +558,8 @@
 
 /* =================================================================== CTA */
 
-.cta { padding-block: var(--space-3xl); }
+.cta { padding-block: var(--space-3xl) calc(var(--space-xl) + clamp(80px, 14vw, 215px)); }
+.cta .page { position: relative; z-index: 1; }
 .cta__grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

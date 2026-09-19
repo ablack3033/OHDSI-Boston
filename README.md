@@ -12,25 +12,15 @@ This repository holds two things:
 
 # The logo
 
-A reproducible, vector-quality **OHDSI-Boston** logo generated entirely from R.
+The OHDSI Boston badge, generated entirely from R.
 
-![OHDSI-Boston logo](ohdsi_boston_logo.png)
+![OHDSI Boston badge](ohdsi_boston_logo.png)
 
-The OHDSI emblem — navy square, sweeping white bow, bowstring and arrow — is
-reconstructed as analytic vector geometry. The orange half of the emblem
-doubles as the lit surface of a globe: an **orthographic projection centred on
-Massachusetts Bay** places Boston, Boston Harbor, Massachusetts Bay, Cape Cod
-Bay and the hook of Cape Cod inside the orange field as a low-contrast tonal
-texture.
-
-The navy half is the night side of that same sphere: a sparse, seeded star
-field, mostly at the threshold of visibility, kept clear of the white mark and
-the square's border.
-
-The design order is deliberate: **OHDSI first, Boston second, map third.** At
-thumbnail size the geography disappears and the mark reads as the ordinary
-OHDSI logo; at larger sizes the orange field resolves into eastern
-Massachusetts.
+A square badge on a black keyline. The OHDSI mark — navy field, sweeping white
+bow, bowstring and arrow — is reconstructed as analytic vector geometry; the
+lit orange half carries a white Boston skyline (the Zakim bridge, the downtown
+towers, the Custom House, the Prudential and the light towers of Fenway Park),
+its reflection broken across the harbour, and the word BOSTON.
 
 ## Running it
 
@@ -38,87 +28,72 @@ Massachusetts.
 Rscript ohdsi_boston_logo.R
 ```
 
-Outputs, all written next to the script:
-
-| File | Notes |
+| File | What it is |
 | --- | --- |
-| `ohdsi_boston_logo.png` | 2400 px wide, 400 dpi (`ragg`) |
-| `ohdsi_boston_logo.svg` | vector (`svglite`); the orange field is a real SVG `linearGradient`/`radialGradient`, not a raster |
-| `ohdsi_boston_logo.pdf` | vector (`cairo_pdf`) |
+| `ohdsi_boston_logo.{png,svg,pdf}` | the badge, with its keyline |
+| `docs/assets/logo.{svg,png}` | the badge without the keyline, for the website |
+| `docs/assets/badge.svg` | emblem, skyline and harbour, no wordmark |
+| `docs/assets/mark.svg` | the OHDSI emblem alone — the only variant that survives favicon size |
+| `docs/assets/skyline.svg` | the white skyline on its own, for the site's horizon band |
 
 ### Requirements
 
-R ≥ 4.1 (gradient fills in `grid`) plus `ggplot2`, `sf`, `grid`, `systemfonts`,
-`svglite` and `ragg`.
+R ≥ 4.1 (gradient fills in `grid`) plus `ggplot2`, `grid`, `systemfonts`,
+`svglite` and `ragg`. Typography is Source Sans 3 (SIL OFL, bundled in
+`fonts/`): Black for BOSTON, Bold for the FENWAY PARK sign.
 
-Geographic data is Natural Earth 1:10m admin-1 states, pre-extracted to
-`data-cache/ne10_northeast_land.geojson` so iteration is fast and the script
-runs offline. Delete that file to force a fresh download from Natural Earth.
-
-Typography is Source Sans 3 (SIL OFL, bundled in `fonts/`), the closest open
-counterpart to the humanist sans of the OHDSI wordmark. `ensure_fonts()`
-registers the faces with `systemfonts` and also links them into the user font
-directory so that the cairo PDF device resolves the same outlines. On a machine
-that has never seen these fonts the *first* run may fall back to a system sans
-in the PDF only, because fontconfig caches are read at process start — a second
-run produces an identical PDF.
+`ensure_fonts()` registers the faces with `systemfonts` and links them into the
+user font directory so the cairo PDF device resolves the same outlines. On a
+machine that has never seen these fonts the *first* run may fall back to a
+system sans in the PDF only, because fontconfig caches are read at process
+start; a second run produces an identical PDF.
 
 ## How it is put together
 
-Everything is expressed in a normalised emblem square, `x = 0..1`, `y = 0..1`,
-which makes the geometry easy to re-tune.
+Everything lives in a normalised art square, `x = 0..1`, `y = 0..1` with y
+pointing up, so any part can be re-tuned by editing a constant.
 
 | Function | Responsibility |
 | --- | --- |
-| `make_ohdsi_geometry()` | navy field, bow, bowstring and arrow as polygons |
-| `orange_field_sf()` | the orange region, used to clip the geography |
-| `get_boston_geography()` | cached Natural Earth coastline (data acquisition only) |
-| `project_geography()` / `to_emblem()` | orthographic projection, then an affine map into emblem coordinates |
-| `make_graticule()` | projected graticule, drawn at ~4 % opacity |
-| `draw_globe_layer()` | land fill, coastline and graticule, clipped to the orange field |
-| `draw_night_sky()` / `glow_polygons()` | the star field over the navy |
-| `orange_gradient_grob()` | the orange gradient |
-| `draw_ohdsi_symbol()` | the white mark, painted over the geography |
-| `fit_line()` / `layout_smallcaps()` / `draw_wordmark()` | type |
-| `build_logo()` / `save_logo()` | assembly and output |
+| `make_ohdsi_geometry()` | navy field, bow, bowstring and arrow |
+| `zakim()` / `downtown()` / `dome()` / `fenway()` | the skyline, as data |
+| `draw_skyline()` | those parts, plus the bulb banks, lattice masts and sign gantry |
+| `make_water()` | the harbour and its reflections |
+| `draw_lettering()` | BOSTON and the FENWAY PARK sign |
+| `build_logo()` / `save_logo()` / `save_skyline()` / `save_all()` | assembly and output |
 
 A few choices worth calling out:
 
-- **The bow edges are circular arcs.** Both edges were least-squares fitted to
-  the reference artwork and match it to within ~0.5 % of the square's width;
-  the fitted centres and radii live in `EMB`.
-- **The orange gradient is radial about the centre of those arcs**, so its
-  tonal bands run parallel to the sweeping white curve. The orange field then
-  reads as a sphere lit from the lower right, with the bow as its limb.
-- **Land is a veil of white over the gradient**, never a separate hue — no
-  blue ocean, no green land, no map labels. Boston is a single barely-there
-  dot rather than a pin.
-- **Fill and coastline are clipped separately.** The fill is intersected with
-  the orange field, but the stroke comes from the land's own boundary, so the
-  clip edges along the bow and the arrow are never drawn as if they were
-  coastline.
-- **Stars sit on a jittered lattice, not a uniform draw.** A uniform draw
-  clumps, and clumps read as dirt rather than as sky. Their radius and opacity
-  follow a steep power law, so most are specks; the few bright ones get a glow
-  built from concentric rings with decaying opacity, because a single flat disc
-  reads as a grey bubble against the navy.
-- **Type is sized by width, never scaled horizontally.** `fit_line()` picks the
-  point size that makes a line its target width in the font's natural
-  proportions; the subtitle is set in true small caps, with each glyph placed
-  from the font's own advance widths.
+- **The bow edges are circular arcs.** Both were least-squares fitted to the
+  reference artwork, weighting the top of the arc where it is flattest and
+  therefore least forgiving. Mean residual is 0.004 of the square's width; the
+  fitted centres and radii are in `EMB`.
+- **The band wraps the top-right corner.** The inner edge leaves through the
+  top border and the outer edge through the right, which is what leaves the
+  small orange wedge in the corner.
+- **The pylon is a straight taper.** A concave profile reads as a wine glass
+  rather than a tower, which is how the first attempt looked.
+- **Lamp banks are circles with gaps, not a plate.** Spaced at 2.1× their
+  radius: any tighter and the bulbs merge into a cloud.
+- **A reflection is the skyline again, not noise.** The strokes are organised
+  into vertical columns under the things that cast them, alternating left and
+  right so each column reads as a zigzag, with clean orange between. Each
+  stroke is a lens — a bar with tapered ends — because a rectangle reads as a
+  dash and a tapered one reads as a glint.
+- **BOSTON is tracked, not stretched.** The reference's face is wider per unit
+  of cap height than Source Sans 3 Black, so matching its width alone would
+  leave the letters a fifth too tall. The cap height is matched and the line
+  tracked out instead: every glyph keeps its own proportions.
 
-The wordmark is set bold and fitted to sit within the width of the emblem
-above it (`LAYOUT$word_width`), with the subtitle narrower again.
-
-Tuning knobs (colours, star field, map framing, layout rhythm, output size) are
-the `COL`, `GEO`, `SKY`, `MAP`, `LAYOUT` and `OUT` lists at the top of the
-script.
+Tuning knobs are the `COL`, `GRADIENT`, `CANVAS`, `EMB` and `WATER_Y`
+constants, plus the skyline functions in section 3.
 
 ## Boston geography
 
-`docs/js/coastline.js` is generated from the same cached Natural Earth extract
-as the logo, in the same orthographic projection. To regenerate it — after
-changing the framing, say — run this against the repository root:
+`docs/js/coastline.js` — the geography inside the website's scrollytelling
+diagram, not the logo — is generated from the cached Natural Earth extract in
+`data-cache/`. To regenerate it after changing the framing, run this against
+the repository root:
 
 ```r
 library(sf); sf_use_s2(FALSE)
@@ -144,5 +119,5 @@ pj   <- st_simplify(pj, dTolerance = 260)          # keeps the file a few KB
 ## Licences
 
 - Code: see repository licence.
-- `fonts/SourceSans3-*.ttf`: Source Sans 3, SIL Open Font Licence 1.1 (`fonts/OFL.txt`).
+- `fonts/SourceSans3-{Black,Bold,Semibold}.ttf`: Source Sans 3, SIL Open Font Licence 1.1 (`fonts/OFL.txt`).
 - `data-cache/ne10_northeast_land.geojson`: derived from Natural Earth, public domain.
